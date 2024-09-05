@@ -10,6 +10,9 @@ hero:
     - theme: brand
       text: Folder
       link: /folder/
+    - theme: brand
+      text: Folder1
+      link: /folder1/
 
 features:
   - title: Feature A
