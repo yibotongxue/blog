@@ -8,11 +8,11 @@ hero:
   tagline: My great project tagline
   actions:
     - theme: brand
-      text: Folder
-      link: /folder/
+      text: Blog
+      link: /blog/
     - theme: brand
-      text: Folder1
-      link: /folder1/
+      text: TODO
+      link: /
 
 features:
   - title: Feature A
