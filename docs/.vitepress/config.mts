@@ -104,7 +104,8 @@ export default defineConfig({
       {
         text: 'Blog',
         items: [
-          { text: 'DOF', link: '/blog/dof.md' }
+          { text: 'DOF', link: '/blog/dof.md' },
+          { text: "自动下载", link: 'blog/auto-download.md'}
         ]
       }
     ],
