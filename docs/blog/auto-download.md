@@ -54,7 +54,7 @@ done
 
 ![vcl课程网站-未经渲染](./images/vcl-original.png)
 
-我们并没有看到我们想要的 `pdf` 链接。这是因为我们看到的网页是渲染之后的，需要执行 `Javascript` 脚本。如果我们直接用 `wget` 或者 `curl` 获取网页源代码，我们得到的跟我们上面图片中的是一样的，没有我们想要的链接。怎么办呢？一个自然的想法就是我们执行想办法获取渲染之后的网页源代码不就行了。这里我们用 `Node.js` 来实现这一点。我们使用 `puppeteer` 来获取渲染后的网页源代码。关于 `puppeteer` 可以参考[这篇文章](https://cloud.tencent.com/developer/article/2317303)。这里我直接给出我用到的 `Javascript` 脚本（命名为 `draw.js`）
+我们并没有看到我们想要的 `pdf` 链接。这是因为我们看到的网页是渲染之后的，需要执行 `Javascript` 脚本。如果我们直接用 `wget` 或者 `curl` 获取网页源代码，我们得到的跟我们上面图片中的是一样的，没有我们想要的链接。怎么办呢？一个自然的想法就是我们想办法获取渲染之后的网页源代码。这里我们用 `Node.js` 来实现这一点。我们使用 `puppeteer` 来获取渲染后的网页源代码。关于 `puppeteer` 可以参考[这篇文章](https://cloud.tencent.com/developer/article/2317303)。这里我直接给出我用到的 `Javascript` 脚本（命名为 `draw.js`）
 
 ```javascript
 const puppeteer = require('puppeteer');
