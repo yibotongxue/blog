@@ -3,23 +3,26 @@
 layout: home
 
 hero:
-  name: "My Awesome Project"
-  text: "A VitePress Site"
-  tagline: My great project tagline
+  name: "个人博客"
+  text: "Bob 的个人博客"
+  tagline: 记录和分享
   actions:
     - theme: brand
       text: Blog
       link: /blog/
-    - theme: brand
-      text: TODO
-      link: /
-
+    - theme: alt
+      text: CV-Blog
+      link: https://yibotongxue.github.io/cv-blog/
+features_title: 这里有
 features:
-  - title: Feature A
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature B
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature C
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
+  - icon: 📗
+    title: 解决问题的经验和方法
+    details: 分享学习计算机过程中的发现的解决一些问题的经验和方法
+  - icon: 📙
+    title: 计算机视觉的笔记
+    details: 托管我修习计算机视觉课程的笔记
+  - icon: 📘
+    title: 其他的学习记录
+    details: 其他的学习计算机过程的记录
 ---
 

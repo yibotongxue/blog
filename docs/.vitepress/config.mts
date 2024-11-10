@@ -91,8 +91,8 @@ const customElements = [
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   base: "/blog/",
-  title: "My Awesome Project",
-  description: "A VitePress Site",
+  title: "个人博客",
+  description: "Bob 的个人博客",
   lastUpdated: true,
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
