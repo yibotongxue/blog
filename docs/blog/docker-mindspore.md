@@ -154,7 +154,7 @@ python -v
 
 一般地， `cuda` 的版本会是 cuda11.6 ，而 `python` 的版本会是 3.7.5 。
 
-#### 安装 MindSpore 的一个失败尝试
+#### 安装 MindSpore
 
 执行到这里，你应该已经进入容器了。下面来安装 `MindSpore` 。首先进入 `MindSpore` 的安装页面，也就是[这个网页](https://www.mindspore.cn/install)。根据刚才的得到的版本号选择对应的命令，你会看到这个页面
 
