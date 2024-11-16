@@ -22,7 +22,7 @@
 
 ### 安装 Docker
 
-Docker 的安装并不容易，首先，**不要使用`apt`进行安装**，因为 `apt` 安装的版本比较落后，很可能会遇到一些奇怪的问题。可以到官网安装，但由于特殊的原因，速度会比较慢，建议使用国内的镜像源来安装。这里推荐[北京大学镜像站](https://mirrors.pku.edu.cn/) ，推荐这个的一个原因是它的帮助文档写得很好。具体的安装方法可以参考这篇[帮助文档](https://mirrors.pku.edu.cn/Help/Docker-ce)。
+Docker 的安装并不容易，首先，**不要使用`apt`进行安装**，因为 `apt` 安装的版本比较落后，很可能会遇到一些奇怪的问题。可以到官网安装，但由于特殊的原因，速度会比较慢，建议使用国内的镜像源来安装。这里使用[北京大学镜像站](https://mirrors.pku.edu.cn/) ，使用这个镜像站的一个原因是它的帮助文档写得很好。具体的安装方法可以参考这篇[帮助文档](https://mirrors.pku.edu.cn/Help/Docker-ce)。
 
 ### 更换 Docker 的源
 
@@ -59,9 +59,9 @@ sudo touch daemon.json
 ```json
 {
   "registry-mirrors": [
-	  "https://xdark.top",
+    "https://xdark.top",
     "https://docker.1ms.run",
-	  "https://docker.rainbond.cc"
+    "https://docker.rainbond.cc"
   ]
 }
 ```
@@ -98,13 +98,13 @@ sudo gpasswd -a ${USER} docker
 
 这里简单介绍一下我失败的尝试，如果你对此不感兴趣，可以跳过去，这部分内容不会影响后面内容的阅读。
 
-首先，如果你进入官方的[安装指引](https://www.mindspore.cn/install) ，会发现根本找不到用 Docker 安装的指导。具体的原因我也不清楚，可能是最新的版本没有支持 GPU ，所以也没有打包 Docker 镜像？但我还是在 `Gitee` 的[这篇文档](https://gitee.com/mindspore/docs/blob/master/install/mindspore_gpu_install_docker.md)找到了相关的内容。但是，很遗憾，我并没有通过[这篇文档](https://gitee.com/mindspore/docs/blob/master/install/mindspore_gpu_install_docker.md)成功的安装 MindSpore 。在执行
+首先，如果你进入官方的[安装指引](https://www.mindspore.cn/install) ，会发现根本找不到用 Docker 安装的指导。具体的原因我也不清楚，可能是最新的版本没有支持 GPU ，所以也没有打包 Docker 镜像？但我还是在 `Gitee` 的[这篇文档](https://gitee.com/mindspore/docs/blob/master/install/mindspore_gpu_install_docker.md)找到了相关的内容。按照其中的引导尝试直接使用以下命令获取最新的稳定镜像，也就是执行下面的命令
 
 ```bash
 docker pull swr.cn-south-1.myhuaweicloud.com/mindspore/mindspore-gpu-{cuda_version}:{version}
 ```
 
-这条命令的时候，我遇到了报错
+但是我遇到了报错
 
 ```bash
 Error response from daemon: Head "https://swr.cn-south-1.myhuaweicloud.com/v2/mindspore/mindspore-gpu-11.1/manifests/2.2.14": denied: You may not login yet
@@ -154,19 +154,15 @@ python -v
 
 一般地， `cuda` 的版本会是 cuda11.6 ，而 `python` 的版本会是 3.7.5 。
 
-#### 安装 MindSpore
-
-##### 失败的方法
-
-这里介绍一个失败的尝试，如果你对此不感兴趣，可以跳过这一部分。
+#### 安装 MindSpore 的一个失败尝试
 
 执行到这里，你应该已经进入容器了。下面来安装 `MindSpore` 。首先进入 `MindSpore` 的安装页面，也就是[这个网页](https://www.mindspore.cn/install)。根据刚才的得到的版本号选择对应的命令，你会看到这个页面
 
 ![MindSpore安装页面](images/mindspore-install.png)
 
-需要注意的是，我们没有找到对 `python3.7.5` 的支持，所以我们尝试 `python3.9` 能否可行。
+需要注意的是，我们没有找到对 `python3.7.5` 的支持，我们可能会想尝试 `python3.9` 能否可行，但是，我尝试的结果是不可行。
 
-执行这条命令
+如果我们执行这条命令（不要执行，因为这并不能成功）
 
 ```bash
 pip install mindspore-dev -i https://pypi.tuna.tsinghua.edu.cn/simple
@@ -185,11 +181,9 @@ python -c "import mindspore;mindspore.set_context(device_target='GPU');mindspore
 [ERROR] ME(54:134625325205120,MainProcess):2024-11-16-08:35:58.530.97 [mindspore/run_check/_check_version.py:219] libcudnn.so (need by mindspore-gpu) is not found. Please confirm that libmindspore_gpu.so is in directory:/usr/local/python-3.7.5/lib/python3.7/site-packages/mindspore/run_check/../lib/plugin and the correct cuda version has been installed, you can refer to the installation guidelines: https://www.mindspore.cn/install
 ```
 
-我也不知道为什么会是这样的报错，但总之这个方法失败了。
+我也不知道为什么会是这样的报错，但总之这个尝试失败了。
 
-##### 成功的方法
-
-既然最新的版本没有支持 `python3.7.5` ，我们来看历史版本。来到[安装页面]()，点击“历史版本”，如图
+既然最新的版本没有支持 `python3.7.5` ，我们来看历史版本。来到[安装页面](https://www.mindspore.cn/install)，点击“历史版本”，如图
 
 ![mindspore历史版本](images/mindspore-history-versions.png)
 
