@@ -15,9 +15,10 @@ export default defineConfig({
     sidebar: [
       {
         text: 'Blog',
+        link: '/blog/',
         items: [
-          { text: "自动下载", link: '/blog/auto-download.md'},
-          { text: "通过 Docker 安装 MindSpore", link: '/blog/docker-mindspore.md'}
+          { text: "自动下载", link: '/blog/auto-download'},
+          { text: "通过 Docker 安装 MindSpore", link: '/blog/docker-mindspore'}
         ]
       }
     ],
