@@ -18,7 +18,8 @@ export default defineConfig({
         link: '/blog/',
         items: [
           { text: "自动下载", link: '/blog/auto-download'},
-          { text: "通过 Docker 安装 MindSpore", link: '/blog/docker-mindspore'}
+          { text: "通过 Docker 安装 MindSpore", link: '/blog/docker-mindspore'},
+          { text: "搭建私有镜像仓库", link: '/blog/docker-registry'}
         ]
       }
     ],
