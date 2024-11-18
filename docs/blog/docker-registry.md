@@ -1,10 +1,10 @@
 # 使用 Docker Registry 搭建私有镜像仓库
 
-在上一篇[文章](https://yibotongxue.github.io/blog/blog/docker-mindspore.html)中我们通过 `Docker` 安装了 `MindSpore` ，其中遇到的关于 `Docker` 的问题之一就是仓库问题，在中国大陆我们无法直接访问 DockerHub ，在上一篇[文章](https://yibotongxue.github.io/blog/blog/docker-mindspore.html)我们通过使用镜像源的方式解决了拉取镜像的问题，但 DockerHub 还有托管镜像的功能。比如我们在上一篇[文章](https://yibotongxue.github.io/blog/blog/docker-mindspore.html)里就构建了自己的 `MindSpore` 镜像，或者我们在容器进行了操作后会将容器导出镜像，我们有时会需要将其同步到云端，或者是为了在不同机器传输的方便，或者是为了备份，这时一般人就可以将其推送到 DockerHub ，然后需要的时候在 `pull` 下来。但是，由于特殊的原因，这里我们就不采取这个方式，而是分享以下几个方法：
+在[这篇文章](../blog/docker-mindspore.md)中我们通过 `Docker` 安装了 `MindSpore` ，其中遇到的关于 `Docker` 的问题之一就是仓库问题，在中国大陆我们无法直接访问 DockerHub ，[在这篇文章](../blog/docker-mindspore.md)我们通过使用镜像源的方式解决了拉取镜像的问题，但 DockerHub 还有托管镜像的功能。比如我们在[这篇文章](../blog/docker-mindspore.md)里就构建了自己的 `MindSpore` 镜像，或者我们在容器进行了操作后会将容器导出镜像，我们有时会需要将其同步到云端，或者是为了在不同机器传输的方便，或者是为了备份，这时一般人就可以将其推送到 DockerHub ，然后需要的时候在 `pull` 下来。但是，由于特殊的原因，这里我们就不采取这个方式，而是分享以下几个方法：
 
 ## 打包镜像进行保存
 
-由于 DockerHub 无法访问和使用，我们可以将镜像打包、压缩，将压缩后的文件上传网盘，比如[百度网盘](https://pan.baidu.com)等。关于 Docker 镜像的打包，可以参考[这篇文章](https://developer.aliyun.com/article/1376348)，但为了节省空间，我们可以在打包之后进行压缩。具体的可以执行下面的命令，以我们上一篇[文章](https://yibotongxue.github.io/blog/blog/docker-mindspore.html)构建的 `MindSpore` 镜像为例
+由于 DockerHub 无法访问和使用，我们可以将镜像打包、压缩，将压缩后的文件上传网盘，比如[百度网盘](https://pan.baidu.com)等。关于 Docker 镜像的打包，可以参考[这篇文章](https://developer.aliyun.com/article/1376348)，但为了节省空间，我们可以在打包之后进行压缩。具体的可以执行下面的命令，以我们[这篇文章](../blog/docker-mindspore.md)构建的 `MindSpore` 镜像为例
 
 ```bash
 # docker save -o [打包的tar名称，可以自己设定] [镜像名称]:[镜像标签]
@@ -37,185 +37,309 @@ docker load -i mindspore.tar
 
 ### 服务器环境的搭建
 
-我的服务器操作系统是 Rocky9.4 ，有 20G 的系统盘和一个 80G 的数据盘，1个核心，内存 1G。这里我从头讲一下服务器环境的搭建，主要是做一个记录，以便以后查阅。因为服务器用的是学校自己的平台提供的，所以很多操作可能并没有很大的通用性，参考意义不大，你可以直接跳过这一节。
+参考[这篇文章](../blog/server-setup.md)。
 
-#### 增加交换内存
+### 安装 Docker-ce 和替换镜像源
 
-由于我们的服务器内存不是很多，我们可以为其增加交换内存，以解决部分可能由内存不足带来的问题。关于交换内存，具体可以看[这篇文章](https://blog.csdn.net/whatday/article/details/108942838)，这里给出创建命令，相关方法来自[Kimi](https://kimi.moonshot.cn/)：
+参考[这篇文章](../blog/docker-mindspore.md)。
 
-```bash
-# 创建 Swap 文件，具体大小可以自己设定，一般内存不足 4G 的时候设置为 4G
-sudo fallocate -l 4G /swapfile
-# 设置权限，确保只有 root 用户可以访问（好吧，其实我也不清楚这方面的内容）
-sudo chmod 600 /swapfile
-# 格式化 Swap 文件
-sudo mkswap /swapfile
-# 启用 Swap 文件
-sudo swapon /swapfile
-# 确保 Swap 文件在开机启动时自动挂载
-echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
-```
+### 拉取 Registry 镜像并运行容器
 
-然后可以通过这个命令查看是否添加成功
+首先执行下面的命令拉取 `Registry` 镜像，关于 `Registry` 镜像，可以参考[官方介绍](https://docs.docker.com/registry/)。
 
 ```bash
-free -h
+docker pull registry
 ```
 
-如果添加成功，应该得到类似这样的输出
+然后执行下面的命令运行容器
 
 ```bash
-               total        used        free      shared  buff/cache   available
-Mem:           1.9Gi       735Mi       490Mi       5.0Mi       906Mi       1.2Gi
-Swap:          4.0Gi          0B       4.0Gi
+docker run -itd -v /home/docker/registry/:/var/lib/registry -p 5000:5000 --restart=always --name registry registry:latest
 ```
 
-#### 将家目录挂载数据盘
+这里 `-itd` 中 `-d` 选项是指定容器后台运行，而 `/home/docker/registry/:/var/lib/registry` 是将容器 `/var/lib/registry` 挂载到宿主机的 `/home/docker/registry` 目录， `/var/lib/registry` 是容器默认防止存储的镜像的地方，这样挂载一方面可以使用数据盘而不占用系统盘，另一方面也方便了后面我们删除容器镜像的操作。更具体地介绍可以参考[这篇文章](https://cloud.tencent.com/developer/article/1698396)。
 
-系统盘一般使用的是 SSD 类型，这个价格一般比较高，而数据盘可以使用 HDD 类型，价格比较低。很多时候我们可以把家目录挂载到数据盘，可以起到降低整体存储成本的作用。云服务平台一般可以在创建云主机的时候选择挂载数据盘，这里主要只是介绍将加目录挂再到数据盘的方法。相关方法来自[Kimi](https://kimi.moonshot.cn/)。
-
-> [!WARNING]
-> 下面的操作仅仅是我的记录，也仅在我的有限次数、有限环境种类内成功了，在你的环境、你的尝试的时候很可能是不正确的，请注意谨慎参考
-
-> [!CAUTION]
-> 下面的操作可能会破坏系统环境，请考虑风险，具体地建议查阅手册或者询问系统管理员，而不是直接复制我的命令
-
-首先执行这条命令，
+同时，为了后面删除镜像的方便，我们进入容器修改其配置文件，也就是执行下面的命令
 
 ```bash
-sudo fdisk -l
+docker exec -it registry /bin/sh
 ```
 
-观察其输出，一般地会是这样
+然后打开配置文件目录，用 `vi` 编辑其，
 
 ```bash
-Disk /dev/sda: 40 GiB, 42949672960 bytes, 83886080 sectors
-Disk model: QEMU HARDDISK   
-Units: sectors of 1 * 512 = 512 bytes
-Sector size (logical/physical): 512 bytes / 512 bytes
-I/O size (minimum/optimal): 512 bytes / 512 bytes
-Disklabel type: gpt
-Disk identifier: 31748190-66BF-49ED-98E7-104532CBE235
-
-Device       Start      End  Sectors  Size Type
-/dev/sda1  2099200 83886046 81786847   39G Linux filesystem
-/dev/sda14    2048    10239     8192    4M BIOS boot
-/dev/sda15   10240   227327   217088  106M EFI System
-/dev/sda16  227328  2097152  1869825  913M Linux extended boot
-
-Partition table entries are not in disk order.
-
-
-Disk /dev/sdb: 60 GiB, 64424509440 bytes, 125829120 sectors
-Disk model: QEMU HARDDISK   
-Units: sectors of 1 * 512 = 512 bytes
-Sector size (logical/physical): 512 bytes / 512 bytes
-I/O size (minimum/optimal): 512 bytes / 512 bytes
+cd /etc/docker/registry
+vi config.yml
 ```
 
-注意到 `/dev/sdb` 下面并没有类似这样的输出
+具体的编辑是， `config.yml` 默认的内容会是
+
+```yaml
+version: 0.1
+log:
+  fields:
+    service: registry
+storage:
+  cache:
+    blobdescriptor: inmemory
+  filesystem:
+    rootdirectory: /var/lib/registry
+http:
+  addr: :5000
+  headers:
+    X-Content-Type-Options: [nosniff]
+health:
+  storagedriver:
+    enabled: true
+    interval: 10s
+    threshold: 3
+```
+
+我们添加这条语句到 `storage` 条目下，
+
+```yaml
+delete:
+  enabled: true
+```
+
+编辑后应该是
+
+```yaml
+version: 0.1
+log:
+  fields:
+    service: registry
+storage:
+  cache:
+    blobdescriptor: inmemory
+  filesystem:
+    rootdirectory: /var/lib/registry
+  delete:
+    enabled: true
+http:
+  addr: :5000
+  headers:
+    X-Content-Type-Options: [nosniff]
+health:
+  storagedriver:
+    enabled: true
+    interval: 10s
+    threshold: 3
+```
+
+然后保存并退出，再重启容器即可，重启容器可以执行这条命令
 
 ```bash
-Device       Start      End  Sectors  Size Type
-/dev/sda1  2099200 83886046 81786847   39G Linux filesystem
-/dev/sda14    2048    10239     8192    4M BIOS boot
-/dev/sda15   10240   227327   217088  106M EFI System
-/dev/sda16  227328  2097152  1869825  913M Linux extended boot
-
-Partition table entries are not in disk order.
+docker restart registry
 ```
 
-> [!WARNING]
-> 注意，你的磁盘名字可能不是 `sda` 和 `sdb`
 
+另一个方法可以参考这篇[知乎文章](https://zhuanlan.zhihu.com/p/509797691)。
 
-这其实说明了 `/dev/sdb` 并没有分区，我们需要进行分区。如果是这样
+### 查看镜像仓库
+
+可以通过这样的命令查看仓库里面的镜像，注意，这条命令应该在服务器执行
 
 ```bash
-Disk /dev/sda: 40 GiB, 42949672960 bytes, 83886080 sectors
-Disk model: QEMU HARDDISK   
-Units: sectors of 1 * 512 = 512 bytes
-Sector size (logical/physical): 512 bytes / 512 bytes
-I/O size (minimum/optimal): 512 bytes / 512 bytes
-Disklabel type: gpt
-Disk identifier: 31748190-66BF-49ED-98E7-104532CBE235
-
-Device       Start      End  Sectors  Size Type
-/dev/sda1  2099200 83886046 81786847   39G Linux filesystem
-/dev/sda14    2048    10239     8192    4M BIOS boot
-/dev/sda15   10240   227327   217088  106M EFI System
-/dev/sda16  227328  2097152  1869825  913M Linux extended boot
-
-Partition table entries are not in disk order.
-
-
-Disk /dev/sdb: 60 GiB, 64424509440 bytes, 125829120 sectors
-Disk model: QEMU HARDDISK   
-Units: sectors of 1 * 512 = 512 bytes
-Sector size (logical/physical): 512 bytes / 512 bytes
-I/O size (minimum/optimal): 512 bytes / 512 bytes
-Disklabel type: dos
-Disk identifier: 0xf7411b02
-
-Device     Boot Start       End   Sectors Size Id Type
-/dev/sdb1        2048 125829119 125827072  60G 83 Linux
+curl http://localhost:5000/v2/_catalog
 ```
 
-则不需要分区，可以直接跳过下面的一步了。如果需要分区，可以执行这样的命令，首先创建挂载点，具体的目录可以自己选择，这里选择 `/mnt/data` 。
+或者在客户端（比如你的本地机器，也就是使用这个镜像托管服务的机器）上执行
 
 ```bash
-sudo mkdir /mnt/data
+curl http://[IP]:5000/v2/_catalog
 ```
 
-然后确定分区
+其中 `[IP]` 应该替换为你的服务器 `ip` 地址。
+
+### 上传镜像
+
+#### 给镜像打标签
+
+这里的操作需要在客户端机器进行（显然），首先给你要上传的镜像打 `tag` ，比如对于 `ubuntu:24.04` 镜像，我们这样打 `tag`，执行下面的命令
 
 ```bash
-sudo fdisk /dev/sdb
+# docker tag [本地镜像名称]:[本地镜像标签] [服务器 ip]:[转发端口]/[你希望上传的镜像仓库名称]:[你希望上传的镜像版本号]
+docker tag ubuntu:24.04 [IP]:5000/ubuntu:24.04
 ```
 
-这一步会带你进入分区的操作，可以参考[这篇文章](https://blog.csdn.net/u012964600/article/details/134603643)，或者简单的按下 `n` ，然后一直回车（选择默认），然后按 `w` 即可。
+其中第二处的 `ubuntu:24.04` 你是可以修改的。
 
-完成分区之后可以选择格式化磁盘，也就是执行这个命令
+#### 推送镜像到服务器
+
+然后可以尝试上传镜像，但我们这里服务器提供的是 `http` 服务，我们需要添加对其的信任才能推送（好吧，我也不了解这方面的知识），也就是在客户端的 `/etc/docker/daemon.json` 添加以下内容：
+
+```json
+"insecure-registries":["[IP]"]
+```
+
+具体的可以参考[这篇文章](https://cloud.tencent.com/developer/article/1698396)。
+
+推送的时候比较容易，就是执行
 
 ```bash
-sudo mkfs.ext4 /dev/sdb1
+docker push [打完标签的镜像]
 ```
 
-然后挂载新分区，也就是执行下面的命令
+即可，比如我们上面的示例得到的镜像是 `[ip]:5000/ubuntu:24.04` ，所以就是
 
 ```bash
-sudo mount /dev/sdb1 /mnt/data
+docker push [ip]:5000/ubuntu:24.04
 ```
 
-然后创建新的 `home` 目录，也就是执行
+### 拉取镜像
+
+拉取镜像也比较容易，在客户端执行下面的命令
 
 ```bash
-sudo mkdir /mnt/data/home
+# docker pull [ip]:[端口]/[镜像仓库名称]:[镜像版本]
+docker pull [ip]:5000/ubuntu:24.04
 ```
 
-再将原来 `home` 目录的数据复制过去，也就是执行这条命令
+注意替换你的服务器 `ip` 和镜像仓库名称、版本。
+
+### 删除镜像
+
+这就是一个比较麻烦的问题了。[这篇文章](https://zhuanlan.zhihu.com/p/509797691)写得比较好，可以参考其。这里简单按照其中的内容写一下文章中写到的两种方法，以下的方法可以在服务器上执行，或者在客户端执行。注意，这篇文章的这部分内容是参考[这篇文章](https://zhuanlan.zhihu.com/p/509797691)的，仅仅作为我自己学习的记录，如果你有类似的问题，建议直接参考[这篇文章](https://zhuanlan.zhihu.com/p/509797691)。
+
+#### 官方方法
+
+[这篇文章](https://zhuanlan.zhihu.com/p/509797691)首先介绍了官方方法。
+
+##### 查询镜像标签列表
+
+首先查询镜像标签列表，执行这条命令：
 
 ```bash
-sudo rsync -aXS --exclude='/*/.gvfs' /home/. /mnt/data/home/
+# 服务器上
+# curl 'http://localhost:[端口]/v2/[镜像名称]/tags/list'
+curl 'http://localhost:5000/v2/ubuntu/tags/list'
+
+# 客户端上
+# curl 'http://[服务器ip]:[端口]/v2/[镜像名称]/tags/list'
+curl 'http://[ip]:5000/v2/ubuntu/tags/list'
 ```
 
-可以测试一下新的 `home` 目录是否正常，执行这条命令
+##### 查询 `digest`
+
+然后查询 `digest` ，注意，这条命令网上很多都不能正确得到结果，因为少了 `-sS -H 'Accept: application/vnd.docker.distribution.manifest.v2+json'` ，正确的应该执行
 
 ```bash
-sudo mount --bind /mnt/data/home /home
+# 服务器上
+# curl -i -sS -H 'Accept: application/vnd.docker.distribution.manifest.v2+json' 'http://localhost:[端口]/v2/[镜像名称]/manifests/[镜像标签]'
+curl -i -sS -H 'Accept: application/vnd.docker.distribution.manifest.v2+json' 'http://localhost:5000/v2/ubuntu/manifests/24.04' | grep Docker-Content-Digest
+
+# 客户端上
+# curl -i -sS -H 'Accept: application/vnd.docker.distribution.manifest.v2+json' 'http://[服务器ip]:[端口]/v2/[镜像名称]/manifests/[镜像标签]'
+curl -i -sS -H 'Accept: application/vnd.docker.distribution.manifest.v2+json' 'http://[服务器ip]:5000/v2/ubuntu/manifests/24.04' | grep Docker-Content-Digest
 ```
 
-然后重启服务器，登录并检查所有用户数据是否正常访问。如果测试结果正常，可以更新 `/etc/fstab` 文件，从而将 `home` 目录永久挂载到数据盘，具体的可以在 `/etc/fstab` 文件添加如下内容
+正确的话应该会得到类似这样的输出
 
 ```bash
-UUID=UUID_OF_DATA_DISK /mnt/data ext4 defaults 0 2
-/mnt/data/home /home none bind 0 0
+Docker-Content-Digest: sha256:744c384e95f65494cd8ce7b560dcce9cb4c2f46b49792fe3cb0dba603ff20522
 ```
 
-然后重新挂载，也就是执行这条命令
+其中 `sha256:744c384e95f65494cd8ce7b560dcce9cb4c2f46b49792fe3cb0dba603ff20522` 就是我们查询的 `digest` 值。
+
+##### 删除镜像
+
+然后删除镜像，也就是执行
 
 ```bash
-sudo mount -a
+# 服务器上
+# curl -X DELETE http://localhost:[端口]/v2/centos/manifests/[上面得到的digest值]
+curl -X DELETE http://localhost:5000/v2/centos/manifests/sha256:a1801b843b1bfaf77c501e7a6d3f709401a1e0c83863037fa3aab063a7fdb9dc
+
+# 服务器上
+# curl -X DELETE http://[服务器ip]:[端口]/v2/centos/manifests/[上面得到的digest值]
+curl -X DELETE http://[服务器ip]:5000/v2/centos/manifests/sha256:a1801b843b1bfaf77c501e7a6d3f709401a1e0c83863037fa3aab063a7fdb9dc
 ```
 
-然后就成功地将家目录挂载到数据盘了。
+##### 垃圾回收
+
+然后进行垃圾回收，也就是执行下面的命令，注意这个需要在服务器执行
+
+```bash
+docker exec registry bin/registry garbage-collect /etc/docker/registry/config.yml
+```
+
+到这里我们就完成了删除。
+
+##### 检查删除效果
+
+这时如果查看标签列表，也就是执行下面的命令
+
+```bash
+# 服务器上
+# curl 'http://localhost:[端口]/v2/[镜像名称]/tags/list'
+curl 'http://localhost:5000/v2/ubuntu/tags/list'
+
+# 客户端上
+# curl 'http://[服务器ip]:[端口]/v2/[镜像名称]/tags/list'
+curl 'http://[ip]:5000/v2/ubuntu/tags/list'
+```
+
+会发现 `tags` 为 `null` 了，也就是我们的删除成功了。但到这里我们还没有删除整个镜像仓库，只是删除了具体的某个标签的镜像，如果执行
+
+```bash
+# 服务器上
+curl http://localhost:5000/v2/_catalog
+
+# 客户端上
+curl http://[IP]:5000/v2/_catalog
+```
+
+会发现即使没有镜像了，镜像仓库还是存在。当然，这是可以理解的，也是合理的。
+
+#### 暴力方法
+
+[这篇文章](https://zhuanlan.zhihu.com/p/509797691)还提供了暴力方法，直接删除镜像文件，这里也分享一下。
+
+##### 删除镜像文件
+
+简单的就可以进入容器删除，比如执行这条命令，注意这条命令需要在服务器执行
+
+```bash
+# docker exec registry rm -rf /var/lib/registry/docker/registry/v2/repositories/[镜像仓库名称]
+docker exec registry rm -rf /var/lib/registry/docker/registry/v2/repositories/ubuntu
+```
+
+或者我们已经将容器的 `/var/lib/registry` 映射到了 宿主机的 `/home/docker/registry` （或者你映射的其他目录），那么我们可以直接删除，比如执行
+
+```bash
+# sudo rm -rf [挂载的本地目录]/docker/registry/v2/repositories/[镜像仓库名称]
+sudo rm -rf /home/docker/registry/docker/registry/v2/repositories/ubuntu
+```
+
+注意，这里删除的是整个仓库，而无法删除某个具体的标签，同时你需要 `sudo` 权限。
+
+##### 进行垃圾回收
+
+然后进行垃圾回收，也就是执行
+
+```bash
+docker exec registry bin/registry garbage-collect /etc/docker/registry/config.yml
+```
+
+再重启容器，也就是执行
+
+```bash
+docker restart registry
+```
+
+就可以完成删除了。
+
+##### 检查删除情况
+
+你可以通过查看镜像仓库来检查是否删除好了，也就是执行
+
+```bash
+# 服务器上
+curl http://localhost:5000/v2/_catalog
+
+# 客户端上
+curl http://[IP]:5000/v2/_catalog
+```
+
+会发现你删除的镜像仓库已经不出现在列表里面了。
