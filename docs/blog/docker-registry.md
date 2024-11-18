@@ -248,12 +248,12 @@ Docker-Content-Digest: sha256:744c384e95f65494cd8ce7b560dcce9cb4c2f46b49792fe3cb
 
 ```bash
 # 服务器上
-# curl -X DELETE http://localhost:[端口]/v2/centos/manifests/[上面得到的digest值]
-curl -X DELETE http://localhost:5000/v2/centos/manifests/sha256:a1801b843b1bfaf77c501e7a6d3f709401a1e0c83863037fa3aab063a7fdb9dc
+# curl -X DELETE http://localhost:[端口]/v2/[镜像仓库名称]/manifests/[上面得到的digest值]
+curl -X DELETE http://localhost:5000/v2/ubuntu/manifests/sha256:a1801b843b1bfaf77c501e7a6d3f709401a1e0c83863037fa3aab063a7fdb9dc
 
 # 服务器上
-# curl -X DELETE http://[服务器ip]:[端口]/v2/centos/manifests/[上面得到的digest值]
-curl -X DELETE http://[服务器ip]:5000/v2/centos/manifests/sha256:a1801b843b1bfaf77c501e7a6d3f709401a1e0c83863037fa3aab063a7fdb9dc
+# curl -X DELETE http://[服务器ip]:[端口]/v2/[镜像仓库名称]/manifests/[上面得到的digest值]
+curl -X DELETE http://[服务器ip]:5000/v2/ubuntu/manifests/sha256:a1801b843b1bfaf77c501e7a6d3f709401a1e0c83863037fa3aab063a7fdb9dc
 ```
 
 ##### 垃圾回收
