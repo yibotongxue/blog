@@ -211,7 +211,7 @@ sudo mount -a
 sudo adduser docker
 ```
 
-然后可以为其设置 `sudo` 权限，或者像[上一篇文章](../blog/docker-mindspore.md)的内容一样设置 `docker` 权限。为了登陆的方便，我们也可以将 `ssh` 公钥传输到这个用户，具体的可以执行下面的命令
+然后可以为其设置 `sudo` 权限，或者像[上一篇文章](./docker-mindspore)的内容一样设置 `docker` 权限。为了登陆的方便，我们也可以将 `ssh` 公钥传输到这个用户，具体的可以执行下面的命令
 
 ```bash
 cd /home/docker

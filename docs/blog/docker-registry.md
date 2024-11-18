@@ -1,10 +1,10 @@
 # 使用 Docker Registry 搭建私有镜像仓库
 
-在[这篇文章](../blog/docker-mindspore.md)中我们通过 `Docker` 安装了 `MindSpore` ，其中遇到的关于 `Docker` 的问题之一就是仓库问题，在中国大陆我们无法直接访问 DockerHub ，[在这篇文章](../blog/docker-mindspore.md)我们通过使用镜像源的方式解决了拉取镜像的问题，但 DockerHub 还有托管镜像的功能。比如我们在[这篇文章](../blog/docker-mindspore.md)里就构建了自己的 `MindSpore` 镜像，或者我们在容器进行了操作后会将容器导出镜像，我们有时会需要将其同步到云端，或者是为了在不同机器传输的方便，或者是为了备份，这时一般人就可以将其推送到 DockerHub ，然后需要的时候在 `pull` 下来。但是，由于特殊的原因，这里我们就不采取这个方式，而是分享以下几个方法：
+在[这篇文章](./docker-mindspore)中我们通过 `Docker` 安装了 `MindSpore` ，其中遇到的关于 `Docker` 的问题之一就是仓库问题，在中国大陆我们无法直接访问 DockerHub ，[在这篇文章](./docker-mindspore)我们通过使用镜像源的方式解决了拉取镜像的问题，但 DockerHub 还有托管镜像的功能。比如我们在[这篇文章](./docker-mindspore)里就构建了自己的 `MindSpore` 镜像，或者我们在容器进行了操作后会将容器导出镜像，我们有时会需要将其同步到云端，或者是为了在不同机器传输的方便，或者是为了备份，这时一般人就可以将其推送到 DockerHub ，然后需要的时候在 `pull` 下来。但是，由于特殊的原因，这里我们就不采取这个方式，而是分享以下几个方法：
 
 ## 打包镜像进行保存
 
-由于 DockerHub 无法访问和使用，我们可以将镜像打包、压缩，将压缩后的文件上传网盘，比如[百度网盘](https://pan.baidu.com)等。关于 Docker 镜像的打包，可以参考[这篇文章](https://developer.aliyun.com/article/1376348)，但为了节省空间，我们可以在打包之后进行压缩。具体的可以执行下面的命令，以我们[这篇文章](../blog/docker-mindspore.md)构建的 `MindSpore` 镜像为例
+由于 DockerHub 无法访问和使用，我们可以将镜像打包、压缩，将压缩后的文件上传网盘，比如[百度网盘](https://pan.baidu.com)等。关于 Docker 镜像的打包，可以参考[这篇文章](https://developer.aliyun.com/article/1376348)，但为了节省空间，我们可以在打包之后进行压缩。具体的可以执行下面的命令，以我们[这篇文章](./docker-mindspore)构建的 `MindSpore` 镜像为例
 
 ```bash
 # docker save -o [打包的tar名称，可以自己设定] [镜像名称]:[镜像标签]
@@ -37,11 +37,11 @@ docker load -i mindspore.tar
 
 ### 服务器环境的搭建
 
-参考[这篇文章](../blog/server-setup.md)。
+参考[这篇文章](./server-setup)。
 
 ### 安装 Docker-ce 和替换镜像源
 
-参考[这篇文章](../blog/docker-mindspore.md)。
+参考[这篇文章](./docker-mindspore)。
 
 ### 拉取 Registry 镜像并运行容器
 
