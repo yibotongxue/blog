@@ -23,6 +23,13 @@ export default defineConfig({
           { text: "搭建私有镜像仓库", link: '/blog/docker-registry'},
           { text: "常用脚本", link: '/blog/script'},
         ]
+      },
+      {
+        text: '现代 C++',
+        link: '/modern-cpp/',
+        items: [
+          { text: "iota", link: 'modern-cpp/iota'},
+        ]
       }
     ],
 
