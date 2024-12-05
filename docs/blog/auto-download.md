@@ -161,6 +161,9 @@ echo "]" >> cookies.json # 删除最后一个逗号
     const cookiesJson = fs.readFileSync('cookies.json', 'utf8');
     const cookies = JSON.parse(cookiesJson);
     const page = await browser.newPage();
+    for (let i = 0; i < cookies.length; i++) {
+        page.setCookie(cookies[i]);
+    }
 ```
 
 这样就可以访问网页获取源代码，然后获取链接下载文件了。
