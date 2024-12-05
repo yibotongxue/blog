@@ -102,3 +102,62 @@ create_time_table("SSD")
 create_time_table("SAD")
 create_time_table("normalized")
 ```
+
+## 重构可视计算与交互概论电子教材排版的 `bash` 脚本
+
+可视计算与交互概论的[线上教材](https://vcl-pku.github.io/vci-book/)是国内相关领域编写地很好的一部教材，大部分都很好，但我希望改造其中的每一节的排版，线上的教材是将每一节的每一小节都另外设置一个页面，这样查看起来需要经常翻页，可能不太方便，这里提供了一个脚本，可以将每一节的所有小节的内容合并到一个网页，从而跟原本的讲义排布查不多。将线上教材的[仓库](https://github.com/vcl-pku/vci-book)下载到本地，在项目根目录新建如下脚本，运行之即可实现更新内容和重新排版。
+
+> [!INFO]
+> 可视计算与交互概论的[线上教材](https://vcl-pku.github.io/vci-book/)编写的很好，将每一节的每一小节单独设置一个页面也是一个很好的排版方式，使得知识结构更加清晰，这里将其改为一个页面仅仅是我个人查阅的方便。
+
+```bash
+#!/bin/bash
+
+git checkout .
+
+git pull
+
+directory="source"
+
+find "$directory" -type f -name "index.md" -not -path "$directory/index.md" | while read -r file; do
+    echo "处理文件：$file"
+    # 读取文件名作为第一个参数
+    base_dir=$(dirname "$file")
+
+    # 找到最后一个 ``` 的行号
+    last_backtick_line=$(grep -n '```' "$file" | tail -n 1 | cut -d: -f1)
+
+    # 如果找不到两个 ```，则退出
+    if [ -z "$last_backtick_line" ]; then
+        continue
+    fi
+
+    # 从最后一个 ``` 开始向上查找，直到遇到第一个空行
+    files=()
+    for ((i = last_backtick_line - 1; i >= 1; i--)); do
+        line=$(sed -n "${i}p" "$file")
+        if [[ -z "$line" ]]; then
+            break
+        fi
+        # 确保行不包含 ```
+        if [[ "$line" != '```' ]]; then
+            full_path="$base_dir/$line.md"
+            files+=("$full_path")
+            # 读取文件内容并拼接
+            sed -i 's/^\(#\+\)/\1#/g' "$full_path"
+        fi
+    done
+
+    sed -i ':a;N;$!ba;s/\n*```{toctree}.*```//;ta' "$file"
+
+    for (( i=${#files[@]}-1; i>=0; i-- )); do 
+        echo $'\n' >> "$file"
+        cat ${files[i]} >> "$file"
+        rm ${files[i]}
+    done
+done
+
+sphinx-autobuild source build/html
+
+git checkout .
+```
