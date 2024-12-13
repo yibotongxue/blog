@@ -1,12 +1,12 @@
-# 从 `printf` 到 `std::print`
+# `C++` 中的输出：从 `printf` 到 `std::print`
 
-说到输出，我们可能更多的熟悉了 `printf` 和 `std::cout` ，但事实上现代 `C++` 还有很多输出相关的方法和技巧，这里记录我遇到的一些。
+说到输出，我们可能更多的熟悉了 `printf` 和 `std::cout` ，但事实上 `C++` 还有很多输出相关的方法和技巧，这篇文章将介绍 `printf` 、 `std::cout` 、 `std::format` 和 `std::print` 和 `std::println` 的内容。
 
 ## `printf`
 
 在介绍现代 `C++` 的输出相关的方法和技巧之前，我们先回顾 `C` 和 `C++` 的经典的输出方式，经典的输出方式无外乎就是 `printf` 和 `std::cout` 了。
 
-`C` 语言最经典的输出方式就是 `printf` 了，很多学校开设的第一门计算机专业课教的都是 `C` 语言，第一节课经常都是输出 `Hello World` ，用的就是 `printf` ，可以说是很多同学第一个使用的函数，就打印 `Hello World` ，其程序可以写作这样
+`C` 语言最经典的输出方式就是 `printf` 了，就打印 `Hello World` ，其程序可以写作这样
 
 ```c
 #include <cstdio>
@@ -267,7 +267,7 @@ int main()
 
 ### `std::print` 和 `std::println`
 
-`C++23` 引入了 `std::print` 和 `std::println` ，基本上使得输出变得十分方便，完全可以替代 `printf` 了。看到函数名我们就能反应过来，这可能是借鉴了 `python` 和 `Java` 的输出，特别是 `std::println` 的命名。来看 `cppreference` 的介绍，常用的应该是
+`C++23` 引入了 `std::print` 和 `std::println` ，基本上使得输出变得十分方便，基本上是可以替代 `printf` 了。看到函数名我们就能反应过来，这可能是借鉴了 `python` 的输出。来看 `cppreference` 的介绍，常用的应该是
 
 ```cpp
 // std::print
