@@ -29,7 +29,7 @@ export default defineConfig({
         link: '/modern-cpp/',
         items: [
           { text: "iota", link: 'modern-cpp/iota'},
-          { text: "输出的那些事", link: 'modern-cpp/print' },
+          { text: "从 printf 到 std::print", link: 'modern-cpp/print' },
         ]
       }
     ],
