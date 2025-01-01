@@ -1,6 +1,6 @@
-# 外排序
+# 外排序及其 `Java` 实现
 
-外排序不同于内排序，其数据存储在外存中，排序结果一般也是写入外存，这也使得其有许多不同于内排序的地方。
+外排序不同于内排序，其数据存储在外存中，排序结果一般也是写入外存，这也使得其有许多不同于内排序的地方。本文将介绍外排序机器 `Java` 实现，我对 `Java` 程序设计和数据结构与算法都不是很熟悉，所以讲的和实现的可能并不是很好，欢迎批评指正。
 
 ## 基本介绍
 
@@ -207,4 +207,232 @@ public class ReplacementSelectionSort {
 }
 ```
 
-我对 `Java` 程序设计不是很熟悉，所以设计的可能并不是很好，欢迎批评指正。
+## 归并
+
+顺串分割是比较容易的，外排序问题的复杂很多在于归并。最朴素的方法是每一次比较每一个顺串的最小元素，得到最小的输出，直至所有顺串都全部输出，或者的做法是每一次归并若干个顺串，直至全部归并。
+
+### 二路归并外排序
+
+每一次对两个顺串进行归并，直至得到最终的输出的方法称为二路归并外排序，基本的方法就是每一次对两个顺串归并。归并顺序的选择往往会影响归并的效率，我们应该每一次归并较小的顺串，这样可以减少读取外存的次树，这样的方法有些类似 Huffman 树，事实上这里只需要一个最小堆即可。确定归并顺序后归并就是简单的，每次将两个顺串最小值的较小值输出到输出文件即可，代码如下：
+
+```java
+public class ExternalTwoPathMerge {
+    public static void merge(String[] inputFiles, String outputFile) {
+        if (inputFiles.length == 1) {
+            File input = new File(inputFiles[0]);
+            File output = new File(outputFile);
+            try {
+                Files.copy(input.toPath(), output.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            } catch (Exception e) {
+                Logger.getLogger(ExternalTwoPathMerge.class.getName()).severe(e.getMessage());
+            }
+        }
+        PriorityQueue<File> pq = new PriorityQueue<>(Comparator.comparingLong(File::length));
+        for (String file : inputFiles) {
+            pq.add(new File(file));
+        }
+        while (pq.size() > 1) {
+            File file1 = pq.poll();
+            File file2 = pq.poll();
+            File outputFile1 = new File(outputFile + "tempForMerge");
+            try {
+                assert file2 != null;
+                mergeFiles(file1, file2, outputFile1);
+                pq.add(outputFile1);
+            } catch (IOException e) {
+                Logger.getLogger(ExternalTwoPathMerge.class.getName()).severe(e.getMessage());
+            }
+        }
+        try {
+            Files.move(pq.poll().toPath(), new File(outputFile).toPath(), StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            Logger.getLogger(ExternalTwoPathMerge.class.getName()).severe(e.getMessage());
+        }
+    }
+
+    private static void mergeFiles(File file1, File file2, File outputFile) throws IOException {
+        BufferedReader reader1 = new BufferedReader(new FileReader(file1.getPath()));
+        BufferedReader reader2 = new BufferedReader(new FileReader(file2.getPath()));
+        BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile.getPath()));
+        String line1 = reader1.readLine();
+        String line2 = reader2.readLine();
+        while (line1 != null && line2 != null) {
+            if (Integer.parseInt(line1) < Integer.parseInt(line2)) {
+                writer.write(line1);
+                line1 = reader1.readLine();
+            } else {
+                writer.write(line2);
+                line2 = reader2.readLine();
+            }
+            writer.newLine();
+        }
+        while (line1 != null) {
+            writer.write(line1);
+            writer.newLine();
+            line1 = reader1.readLine();
+        }
+        while (line2 != null) {
+            writer.write(line2);
+            writer.newLine();
+            line2 = reader2.readLine();
+        }
+        reader1.close();
+        reader2.close();
+        writer.close();
+    }
+}
+```
+
+### 多路归并外排序
+
+事实上更多用的是多路归并排序，通常对 $m$ 个顺串进行 $k$ 路归并，归并趟数为 $log_km$ ，增加归并的路数能减少归并的趟数。
+
+多路归并的顺序安排与二路归并排序的类似，不过需要考虑虚节点，而最为不同的在于归并的方法，我们可以采用类似于二路归并是的方法，直接对每个顺串的最小值进行比较，找出最小值输出，但这样会有许多重复比较，一个比较常用的方法是比较树，通常有赢者树和败方树两种，它们都是完全二叉树。
+
+#### 赢者树
+
+通常的结构如下图所示：
+
+![winner-tree](images/winner-tree.png)
+
+叶子节点存储的是顺串的索引，内部节点记录的是比较的胜者，也就是较小者的索引，根节点输出的就是最后的胜者（即最小者的索引）。当最小值输出后，对应的顺串会重新读入新的记录，沿着到根节点的路径更新节点的胜者，而不需要重新比较其他的不相关记录。基本的设计可以是
+
+```java
+public class WinnerTree {
+    private final int[] tree;
+    private final BufferedReader[] readers;
+    private final int[] currentValues;
+
+    public WinnerTree(BufferedReader[] readers) throws IOException {
+        int n = readers.length;
+        this.readers = new BufferedReader[n];
+        System.arraycopy(readers, 0, this.readers, 0, n);
+        this.tree = new int[2 * n];
+        for (int i = 0; i < 2 * n; i++) {
+            this.tree[i] = 0;
+        }
+        // 设置叶子节点为玩家的索引
+        for (int i = 0; i < n; i++) {
+            tree[n + i] = i;
+        }
+        // 将内部节点设置为左子结点的值
+        for (int i = n - 1; i > 0; i--) {
+            tree[i] = tree[2 * i];
+        }
+        currentValues = new int[n];
+        for (int i = 0; i < n; i++) {
+            String line = this.readers[i].readLine();
+            if (line == null) {
+                currentValues[i] = Integer.MAX_VALUE;
+            } else {
+                currentValues[i] = Integer.parseInt(line);
+            }
+        }
+        play();
+    }
+
+    private void play() {
+        int n = currentValues.length;
+        for (int i = n - 1; i > 0; i--) {
+            if (currentValues[tree[2 * i]]< currentValues[tree[2 * i + 1]]) {
+                tree[i] = tree[2 * i];
+            } else {
+                tree[i] = tree[2 * i + 1];
+            }
+        }
+    }
+
+    public void rePlay() throws IOException {
+        int playerIndex = tree[1];
+        String line = readers[playerIndex].readLine();
+        if (line == null) {
+            currentValues[playerIndex] = Integer.MAX_VALUE;
+        } else {
+            currentValues[playerIndex] = Integer.parseInt(line);
+        }
+        int i = (playerIndex + currentValues.length) / 2;
+        while (i > 0) {
+            if (currentValues[tree[2 * i]] < currentValues[tree[2 * i + 1]]) {
+                tree[i] = tree[2 * i];
+            } else {
+                tree[i] = tree[2 * i + 1];
+            }
+            i /= 2;
+        }
+    }
+
+    public Integer getWinner() {
+        return currentValues[tree[1]];
+    }
+}
+```
+
+#### 败方树
+
+与赢者树不同的是，败方树记录的是败方的索引，这样的好处是更新或者说节点上升的时候，不需要访问其子结点而可以直接与该节点上索引的值进行比较，通常败方树的根节点会再连接一个节点，记录最终的胜者，基本的结构如下：
+
+![loser-tree](images/loser-tree.png)
+
+一般的代码可以如下设计
+
+```java
+public class LoserTree {
+    private final int[] tree;
+    private final BufferedReader[] readers;
+    private final int[] currentValues;
+
+    public LoserTree(BufferedReader[] readers) throws IOException {
+        this.readers = readers;
+        this.currentValues = new int[readers.length];
+        this.tree = new int[2 * readers.length];
+        for (int i = 0; i < readers.length; i++) {
+            String line = readers[i].readLine();
+            currentValues[i] = line == null ? Integer.MAX_VALUE : Integer.parseInt(line);
+        }
+        buildLoserTree();
+    }
+
+    private void buildLoserTree() {
+        int n = currentValues.length;
+        int[] winners = new int[2 * n];
+        for (int i = 0; i < n; i++) {
+            tree[n + i] = currentValues[i];
+            winners[n + i] = i;
+        }
+        for (int i = n - 1; i > 0; i--) {
+            int left = i << 1;
+            int right = left + 1;
+            if (currentValues[winners[left]] < currentValues[winners[right]]) {
+                tree[i] = winners[right];
+                winners[i] = winners[left];
+            } else {
+                tree[i] = winners[left];
+                winners[i] = winners[right];
+            }
+        }
+        tree[0] = winners[1];
+    }
+
+    public int getWinner() {
+        return currentValues[tree[0]];
+    }
+
+    public void rePlay() throws IOException {
+        int index = tree[0];
+        String line = readers[index].readLine();
+        currentValues[index] = line == null ? Integer.MAX_VALUE : Integer.parseInt(line);
+        int n = currentValues.length;
+        int i = n + index;
+        int winner = index;
+        while (i > 1) {
+            i >>= 1;
+            if (currentValues[winner] > currentValues[tree[i]]) {
+                int temp = winner;
+                winner = tree[i];
+                tree[i] = temp;
+            }
+        }
+        tree[0] = winner;
+    }
+}
+```
