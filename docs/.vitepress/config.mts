@@ -41,6 +41,10 @@ export default defineConfig({
           items: [
             { text: '外排序', link: '/backend/datastructure/external-sort' },
           ]
+        },
+        {
+          text: '数据库',
+          link: '/backend/database/'
         }
       ],
     },
