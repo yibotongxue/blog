@@ -44,7 +44,10 @@ export default defineConfig({
         },
         {
           text: '数据库',
-          link: '/backend/database/'
+          link: '/backend/database/',
+          items: [
+            { text: 'MySQL 基础', link: '/backend/database/mysql-base' },
+          ]
         }
       ],
     },
