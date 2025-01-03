@@ -216,3 +216,61 @@ MySQL的使用通常需要服务机和客户机。服务机是与数据打交道
 ### MySQL工具
 
 比较常用的客户机有mysql命令行实用程序，MySQL Administrator和MySQL Query Browser，我目前只安装了mysql命令行实用程序，后续的实验基于此开展。
+
+## 简单使用
+
+这里简单介绍 mysql命令行实用程序的简单使用。
+
+### 选择数据库
+
+使用如下命令
+
+```sql
+USE <databasename>;
+```
+
+比如按照《MySQL必知必会》中的数据库以及我上面的操作，就应该是（后面的所有例子都不再说明这一点）
+
+```sql
+USE learningdatabase;
+```
+
+会得到如下输出
+
+```sql
+Database changed
+```
+
+### 简单的显示
+
+显示数据库可以用如下的语句
+
+```sql
+SHOW DATABASES;
+```
+
+显示数据库的表可以用如下的语句
+
+```sql
+SHOW TABLES;
+```
+
+显示一张表的列可以用如下的语句
+
+```sql
+SHOW COLUMN FROM <tablename>;
+```
+
+比如按照《MySQL必知必会》中的数据库可以如下显示 `customers` 表中的列
+
+```sql
+SHOW COLUMN FROM customers;
+```
+
+这可以用 `DESCRIBE` 语句替代
+
+```sql
+DESCRIBE customers;
+```
+
+还有其他的显示相关的语句，更具体的参考书籍。
