@@ -49,6 +49,7 @@ export default defineConfig({
             { text: 'MySQL 基础', link: '/backend/database/mysql-base' },
             { text: 'MySQL 检索', link: '/backend/database/mysql-search' },
             { text: 'MySQL 过滤', link: '/backend/database/mysql-filter' },
+            { text: 'MySQL 数据处理', link: '/backend/database/mysql-dataprocess' },
           ]
         }
       ],
