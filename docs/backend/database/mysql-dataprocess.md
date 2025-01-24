@@ -1,6 +1,6 @@
-# 计算字段、数据处理函数、汇总数据和数据分组
+# 计算字段、数据处理函数和汇总数据
 
-一些情况下，我们需要的数据无法直接查询得到，或为数据库中没有对应的字段，或者对数据进行处理。把数据全部获取然后再处理得到我们想要的结果是可以的，但这不如使用数据库自带的处理方法方便，而且可能会带来网络带宽浪费，当数据量很大时甚至内存无法容纳，所以一般都应该先考虑在数据库处理的到我们想要的数据。这部分内容主要是《MySQL必知必会》第10、11、12、13章的学习笔记。
+一些情况下，我们需要的数据无法直接查询得到，或为数据库中没有对应的字段，或者对数据进行处理。把数据全部获取然后再处理得到我们想要的结果是可以的，但这不如使用数据库自带的处理方法方便，而且可能会带来网络带宽浪费，当数据量很大时甚至内存无法容纳，所以一般都应该先考虑在数据库处理的到我们想要的数据。这部分内容主要是《MySQL必知必会》第10、11、12章的学习笔记。
 
 ## 创建计算字段
 
@@ -85,3 +85,124 @@ SELECT vend_name, Upper(vend_name) AS vend_name_upcase FROM vendors Order BY ven
 ```
 
 需要特殊注意的是 `Soundex` 函数，这个函数是一个将任何文本串转换为描述其语音表示的字母数字模式的算法，可以用于解决一些可能出现的输入的时候的错误。
+
+### 日期和时间处理函数
+
+常用的日期和时间处理函数如下表
+
+| 函数 | 说明 |
+| :--: | :--: |
+| AddDate() | 增加一个日期（天、周等） |
+| AddTime() | 增加一个时间（时、分等） |
+| CurDate() | 返回当前日期 |
+| CurTime() | 返回当前时间 |
+| Date() | 返回日期时间的日期部分 |
+| DateDiff() | 计算两个日期之差 |
+| Date_Add() | 高度灵活的日期运算函数 |
+| Date_Format() | 返回一个格式化的日期或时间串 |
+| Day() | 返回一个日期的天数部分 |
+| DayOfWeek() | 对于一个日期，返回对应的是星期几 |
+| Hour() | 返回一个时间的小时部分 |
+| Minute() | 返回一个时间的分钟部分 |
+| Month() | 返回一个日期的月份部分 |
+| Now() | 返回当前日期和实践 |
+| Second() | 返回一个时间的秒部分 |
+| Time() | 返回一个日期时间的时间部分 |
+| Year() | 返回一个日期的年份部分 |
+
+比如如下的语句
+
+```sql
+SELECT cust_id, order_num FROM orders WHERE Date(order_date) = '2005-09-01';
+```
+
+### 数据处理函数
+
+这部分的函数使用并不频繁，但却是所有数据库软件最为统一的部分。常用的如下表
+
+| 函数 | 说明 |
+| :--: | :--: |
+| Abs() | 返回一个数的绝对值 |
+| Cos() | 返回一个角度的余弦 |
+| Exp() | 返回一个数的指数值 |
+| Mod() | 返回除操作的余数 |
+| Pi() | 返回圆周率 |
+| Rand() | 返回一个随机数 |
+| Sin() | 返回一个角度的正弦 |
+| Sqrt() | 返沪一个数的平方根 |
+| Tan() | 返回一个角度的正切 |
+
+## 汇总数据
+
+一些时候我们需要对数据进行汇总，而不是把所有数据输出，比如需要计数、求和等，这时需要用到聚集函数。
+
+> 聚集函数（aggregate function） 运行在行组上，计算和返回单个值的函数。
+
+### 聚集函数
+
+SQL聚集函数有如下几个
+
+| 函数 | 说明 |
+| :--: | :--: |
+| AVG() | 返回某列的平均值 |
+| COUNT() | 返回某列的行数 |
+| MAX() | 返回某列的最大值 |
+| MIN() | 返回某列的最小值 |
+| SUM() | 返回某列值之和 |
+
+比如如下的语句可以查询价格的平均值
+
+```sql
+SELECT AVG(prod_price) AS avg_price FROM products;
+```
+
+如果要对一张表的列计数，可以使用 `COUNT(*)` ，比如如下的语句
+
+```sql
+SELECT COUNT(*) AS num_cust FROM customers;
+```
+
+可以查询客户的数目。如果要查询具体某一列的个数，可以使用 `COUNT(column)` ，比如如下的语句
+
+```sql
+SELECT COUNT(cust_email) AS num_cust FROM customers;
+```
+
+可以查询客户邮件地址的数目。
+
+使用 `MAX` 函数可以查询某一列的最大值，只用 `MIN` 函数可以查询某一列的最小值，比如如下的语句
+
+```sql
+SELECT MAX(prod_price) AS max_price FROM products;
+SELECT MIN(prod_price) AS min_price FROM products;
+```
+
+使用 `SUM` 函数可以查询某一列的和，比如如下的语句
+
+```sql
+SELECT SUM(quantity) AS items_ordered FROM orderitems WHERE order_num = 20005;
+```
+
+也可以查询某个计算结果的和，比如如下的语句
+
+```sql
+SELECT SUM(item_price*quantity) AS total_price FROM orderitems WHERE order_num = 20005;
+```
+
+### 聚集不同值
+
+可以通过 `DISTINCT` 关键字，使得在汇总某一列数据的时候只考虑不同的值，比如如下的语句
+
+```sql
+SELECT AVG(DISTINCT prod_price) AS avg_price FROM products WHERE vend_id = 1003;
+```
+
+事实上上面没有使用 `DISTINCT` 关键字的地方默认使用了 `ALL` 关键字。
+
+### 组合聚集函数
+
+不同的聚集函数可以组合，比如如下的语句
+
+```sql
+SELECT COUNT(*) AS num_items, MIN(prod_price) AS price_min, MAX(prod_price) AS price_max, AVG(prod_price) AS price_avg FROM products;
+```
