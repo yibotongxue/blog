@@ -13,16 +13,12 @@ hero:
     - theme: alt
       text: CV-Blog
       link: https://yibotongxue.github.io/cv-blog/
+    - theme: alt
+      text: nlp-blog
+      link: https://yibotongxue.github.io/nlp-blog/
 features_title: 这里有
 features:
-  - icon: 📗
-    title: 解决问题的经验和方法
+  - title: 学习计算机技术的分享
     details: 分享学习计算机过程中的发现的解决一些问题的经验和方法
-  - icon: 📙
-    title: 计算机视觉的笔记
-    details: 托管我修习计算机视觉课程的笔记
-  - icon: 📘
-    title: 其他的学习记录
-    details: 其他的学习计算机过程的记录
 ---
 
