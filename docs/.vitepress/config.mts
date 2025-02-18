@@ -51,6 +51,13 @@ export default defineConfig({
             { text: 'MySQL 过滤', link: '/backend/database/mysql-filter' },
             { text: 'MySQL 数据处理', link: '/backend/database/mysql-dataprocess' },
           ]
+        },
+        {
+          text: 'Java程序设计',
+          link: '/backend/Java/',
+          items: [
+            { text: 'Java 简介', link: '/backend/Java/intro' },
+          ]
         }
       ],
     },
