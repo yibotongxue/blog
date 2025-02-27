@@ -1,6 +1,6 @@
-# 计算字段、数据处理函数和汇总数据
+# 计算字段、数据处理函数、汇总数据和分组数据
 
-一些情况下，我们需要的数据无法直接查询得到，或为数据库中没有对应的字段，或者对数据进行处理。把数据全部获取然后再处理得到我们想要的结果是可以的，但这不如使用数据库自带的处理方法方便，而且可能会带来网络带宽浪费，当数据量很大时甚至内存无法容纳，所以一般都应该先考虑在数据库处理的到我们想要的数据。这部分内容主要是《MySQL必知必会》第10、11、12章的学习笔记。
+一些情况下，我们需要的数据无法直接查询得到，或为数据库中没有对应的字段，或者对数据进行处理。把数据全部获取然后再处理得到我们想要的结果是可以的，但这不如使用数据库自带的处理方法方便，而且可能会带来网络带宽浪费，当数据量很大时甚至内存无法容纳，所以一般都应该先考虑在数据库处理的到我们想要的数据。这部分内容主要是《MySQL必知必会》第10、11、12、13章的学习笔记。
 
 ## 创建计算字段
 
@@ -206,3 +206,70 @@ SELECT AVG(DISTINCT prod_price) AS avg_price FROM products WHERE vend_id = 1003;
 ```sql
 SELECT COUNT(*) AS num_items, MIN(prod_price) AS price_min, MAX(prod_price) AS price_max, AVG(prod_price) AS price_avg FROM products;
 ```
+
+## 分组数据
+
+分组是在 `SELECT` 语句的子句完成的，比如如下的语句
+
+```sql
+SELECT vend_id, COUNT(*) AS num_prods FROM products GROUP BY vend_id;
+```
+
+其会得到每个 `vend_id` 及其对应的行的数目，输出如下
+
+```
++---------+-----------+
+| vend_id | num_prods |
++---------+-----------+
+|    1001 |         3 |
+|    1002 |         2 |
+|    1003 |         7 |
+|    1005 |         2 |
++---------+-----------+
+4 rows in set (0.00 sec)
+
+```
+
+如果要对分组进行过滤，不能使用 `WHERE` 子句，因为 `WHERE` 子句是对行的过滤，无法对分组进行过滤，需要使用 `HAVING` 子句，比如如下的语句
+
+```sql
+SELECT cust_id, COUNT(*) AS orders FROM orders GROUP BY cust_id HAVING COUNT(*) >= 2;
+```
+
+得到如下的输出
+
+```
++---------+--------+
+| cust_id | orders |
++---------+--------+
+|   10001 |      2 |
++---------+--------+
+1 row in set (0.00 sec)
+
+```
+
+也可以使用 `WHERE` 子句在分组前先对行进行过滤，比如如下的语句
+
+```sql
+SELECT vend_id, COUNT(*) AS num_prods FROM products WHERE prod_price >= 10 GROUP BY vend_id HAVING COUNT(*) >= 2;
+```
+
+`GROUP` 得到的分组的顺序是没有保证的，一般使用 `GROUP BY` 的同时应该使用 `ORDER BY` ，比如如下的语句
+
+```sql
+SELECT order_num, SUM(quantity*item_price) AS ordertotal FROM orderitems GROUP BY order_num HAVING SUM(quantity*item_price) >= 50 ORDER BY ordertotal;
+```
+
+## `SELECT` 子句的顺序
+
+`SELECT` 子句的顺序，可以按下表组织
+
+| 子句 | 说明 | 是否必须使用 |
+| :--: | :--: | :--: |
+| SELECT | 要返回的列或表达式 | 是 |
+| FROM | 从中检索数据的表 | 仅在从表选择数据时使用 |
+| WHERE | 行级过滤 | 否 |
+| GROUP BY | 分组说明 | 仅在按组计算聚集时使用 |
+| HAVING | 组级过滤 | 否 |
+| ORDER BY | 输出排序顺序 | 否 |
+| LIMIT | 要检索的行数 | 否 |
