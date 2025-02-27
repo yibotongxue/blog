@@ -70,7 +70,7 @@ SELECT products.vend_id FROM products;
 使用完全限定的表明也是可以的，比如
 
 ```sql
-SELECT products.vend_id FROM learningdatabase.products;
+SELECT products.vend_id FROM crashcourse.products;
 ```
 
 ## 排序检索数据

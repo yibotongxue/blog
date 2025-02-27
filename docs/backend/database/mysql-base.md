@@ -158,31 +158,35 @@ sudo service mysql start
 CREATE USER 'username'@'localhost' IDENTIFIED BY 'password';
 ```
 
-我这里创建的用户名为 `testuser` ，后续的实验也是按照这个用户名。
+我这里创建的用户名为 `learner` ，后续的实验也是按照这个用户名。
 
 #### 安装数据库
 
-通过这个[链接](https://forta.com/wp-content/uploads/books/0672327120/mysql_scripts.zip)（这是书上给的链接，你可以到书上指定的官网找到这个链接）下载脚本压缩包，解压缩后得到两个 `sql` 脚本：`create.sql` 和 `populate.sql` ，分别负责创建数据库和写入数据。可以通过执行下面的命令（注意你可能需要替换用户名和数据库名字）安装数据库
-
-```bash
-mysql -u testuser -p learningdatabase < create.sql
-mysql -u testuser -p learningdatabase < populate.sql
-```
-
-这里使用 `learningdatabase` 作为数据库名，后续的内容也是基于这个数据库名。
-
-#### 赋予权限
-
-如果使用自己创建的用户，你需要为其赋予相应的权限。登陆并使用数据库
-
-```bash
-mysql -u testuser -p learningdatabase
-```
-
-执行语句
+首先创建数据库，这里命名为 `crashcourse` ，登陆 `root` 用户，然后执行
 
 ```sql
-GRANT privileges ON learningdatabase.* TO 'testuser'@'localhost';
+CREATE DATABASE crashcourse;
+```
+
+然后赋予 `learner` 用户权限
+
+```sql
+GRANT ALL PRIVILEGES ON crashcourse.* TO 'learner'@'localhost';
+```
+
+退出登陆，然后通过这个[链接](https://forta.com/wp-content/uploads/books/0672327120/mysql_scripts.zip)（这是书上给的链接，你可以到书上指定的官网找到这个链接）下载脚本压缩包，解压缩后得到两个 `sql` 脚本：`create.sql` 和 `populate.sql` ，分别负责创建数据库和写入数据。可以通过执行下面的命令（注意你可能需要替换用户名和数据库名字）安装数据库
+
+```bash
+mysql -u learner -p crashcourse < create.sql
+mysql -u learner -p crashcourse < populate.sql
+```
+
+这里使用 `crashcourse` 作为数据库名，后续的内容也是基于这个数据库名。
+
+然后可以登陆并使用数据库
+
+```bash
+mysql -u learner -p crashcourse
 ```
 
 可以简单查看，执行语句
@@ -232,7 +236,7 @@ USE <databasename>;
 比如按照《MySQL必知必会》中的数据库以及我上面的操作，就应该是（后面的所有例子都不再说明这一点）
 
 ```sql
-USE learningdatabase;
+USE crashcourse;
 ```
 
 会得到如下输出
