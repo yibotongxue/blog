@@ -161,3 +161,61 @@ sphinx-autobuild source build/html
 
 git checkout .
 ```
+
+## 自动下载并解密大语言模型基础与对齐讲义的 `bash` 脚本
+
+首先需要安装[qpdf](https://github.com/qpdf/qpdf)， `Ubuntu` 系统可以通过如下命令安装
+
+```bash
+sudo apt install qpdf
+```
+
+脚本内容如下
+
+```bash
+#!/bin/bash
+
+# 需要将密码写在这里，按讲义的顺序
+passwords=("密码1" "密码2")
+
+wget https://pku-llm.ai/course/25spring/handouts_replays/ -O result.html
+
+links=( $(grep -oP 'href="\K[^"]+\.pdf[^"]+' result.html) )
+
+passwords_len=${#passwords[@]}
+links_len=${#links[@]}
+len=$links_len
+
+if [[ $passwords_len < $links_len ]]; then
+    echo "The passwords need to be added."
+    read -p "You can download All PDF(Y) or Only PDF with Password(O) or Abort(A) [Y/O/A]" choice
+    case $choice in 
+        Y | y)
+            echo "Download All PDF";;
+        O | o)
+            echo "Download Only PDF with Password"
+            len=$passwords_len;;
+        A | a)
+            echo "Bye"
+            exit 1;;
+        *)
+            echo "Bad input, Bye"
+            exit 1;;
+    esac
+fi
+
+for (( i=0; i<$len; i++ )) do 
+    # 直接获取会有转义 amp; ，需要去除
+    link=$(echo "${links[i]}" | sed 's/amp;//g')
+    file_name=$(echo $link | grep -oP '\/\K[^\.^\/]+.pdf')
+    wget "$link" -O "$file_name"
+    if [[ $i<$passwords_len ]]; then
+        qpdf --password="${passwords[i]}" --decrypt --replace-input "$file_name"
+        if [[ $? == 0 ]]; then
+            rm "${file_name}.~qpdf-orig"
+        fi
+    fi
+done
+
+rm result.html
+```
