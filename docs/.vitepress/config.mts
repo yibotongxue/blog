@@ -50,6 +50,7 @@ export default defineConfig({
             { text: 'MySQL 检索', link: '/backend/database/mysql-search' },
             { text: 'MySQL 过滤', link: '/backend/database/mysql-filter' },
             { text: 'MySQL 数据处理', link: '/backend/database/mysql-dataprocess' },
+            { text: 'MySQL 子查询和联结', link: '/backend/database/mysql-subquery-and-join' },
           ]
         },
         {
