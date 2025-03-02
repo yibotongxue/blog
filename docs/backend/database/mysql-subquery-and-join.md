@@ -45,3 +45,94 @@ SELECT vend_name, prod_name, prod_price FROM vendors INNER JOIN products ON vend
 ```sql
 SELECT prod_name, vend_name, prod_price, quantity FROM orderitems, products, vendors WHERE products.vend_id = vendors.vend_id AND orderitems.prod_id = products.prod_id AND order_num = 20005;
 ```
+
+## 创建高级联结
+
+### 使用表别名
+
+别名除了可以用于列名和计算字段外，SQL还允许对表起别名，比如如下的语句
+
+```sql
+SELECT cust_name, cust_contact FROM customers AS c, orders AS o, orderitems AS oi WHERE c.cust_id = o.cust_id AND oi.order_num = o.order_num AND prod_id = 'TNT2';
+```
+
+表别名除了能缩短SQL语句，还能允许在单条SELECT语句中多次使用相同的表，这通常用于自联结，比如如下的例子（来自[腾讯元宝](https://yuanbao.tencent.com/)）
+
+```sql
+SELECT e.FirstName AS EmployeeFirstName, e.LastName AS EmployeeLastName,
+       m.FirstName AS ManagerFirstName, m.LastName AS ManagerLastName
+FROM Employees AS e
+LEFT JOIN Employees AS m ON e.ManagerID = m.EmployeeID;
+```
+
+可以查询所有员工及其经理的姓名。
+
+### 使用不同类型的联结
+
+除了以上介绍过了的等值联结或内部联结，还有自联结、自然联结和外部联结。
+
+#### 自联结
+
+比如如下的语句
+
+```sql
+SELECT p1.prod_id, p1.prod_name FROM products AS p1, products AS p2 WHERE p1.vend_id = p2.vend_id AND p2.prod_id = 'DTNTR';
+```
+
+可以查找生产 DTNTR 的生产商的所有产品。这事实上也可以用子查询实现
+
+```sql
+SELECT prod_id, prod_name FROM products WHERE vend_id = (SELECT vend_id FROM products WHERE prod_id = 'DTNTR');
+```
+
+但更多时候我们推荐使用自联结而不是子查询，因为联结往往比子查询更快。
+
+#### 自然联结
+
+当两张表只有一个公共列的时候，我们可以使用自然联结，比如如下的情况（来自[腾讯元宝](https://yuanbao.tencent.com/)），我们有一张员工信息表
+
+表：Employees（员工表）​
+| EmployeeID | Name | DepartmentID |
+| :--: | :--: | :--: |
+| 1 | 张三 | 10 |
+| 2 | 李四 | 20 |
+| 3 | 王五 | 10 |
+
+而有部门信息表如下
+
+表：Departments（部门表）​
+| DepartmentID | DepartmentName |
+| :--: | :--: |
+| 10 | 人力资源 |
+| 20 | 财务 |
+| 30 | 技术 |
+
+可以使用如下的语句员工及其所属部门
+
+```sql
+SELECT *
+FROM Employees
+NATURAL JOIN Departments;
+```
+
+#### 外部联结
+
+内部联结等往往需要两张表都有的记录才能查询到，而外部联结则可以实现检索出一张表所有的记录与另一张表对应的列，或者两张表中的所有记录及对应的列（但MySQL没有直接支持的）。左外部连接检索出左表中所有的记录及其右表中对应的列，如果没有则为 `NULL` ，右外部联结检索出右表中所有的记录及其左表中对应的列，如果没有则为 `NULL` ，全外部联结检索出两张表中所有的记录及其对应的列，如果没有则为 `NULL` ，需要注意的是， MySQL 不支持全外部联结，左外部联结和右外部联结分别通过 `LEFT OUTER JOIN` 、 `RIGHT OUTER JOIN`。比如如下的语句
+
+```sql
+SELECT customers.cust_id, orders.order_num FROM customers LEFT OUTER JOIN orders ON customers.cust_id = orders.cust_id;
+```
+
+### 使用带聚集函数的联结
+
+聚集函数可以与联结表结合，比如如下的语句查询了所有客户和每个客户的订单数
+
+```sql
+SELECT customers.cust_name, customers.cust_id, COUNT(orders.order_num) AS num_ord FROM customers INNER JOIN orders ON customers.cust_id = orders.cust_id GROUP BY customers.cust_id;
+```
+
+但这有个问题是没有订单数的客户不会显示，这可以用外部联结解决，使用如下的语句
+
+```sql
+SELECT customers.cust_name, customers.cust_id, COUNT(orders.order_num) AS num_ord FROM customers LEFT OUTER JOIN orders ON customers.cust_id = orders.cust_id GROUP BY customers.cust_id;
+```
