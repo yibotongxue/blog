@@ -63,7 +63,9 @@ export default defineConfig({
         {
           text: '算法设计与分析',
           link: '/backend/algorithm/',
-          items: []
+          items: [
+            { text: '动态规划', link: '/backend/algorithm/dp' },
+          ]
         }
       ],
     },
