@@ -59,6 +59,11 @@ export default defineConfig({
           items: [
             { text: 'Java 简介', link: '/backend/Java/intro' },
           ]
+        },
+        {
+          text: '算法设计与分析',
+          link: '/backend/algorithm/',
+          items: []
         }
       ],
     },
