@@ -58,6 +58,7 @@ export default defineConfig({
           link: '/backend/Java/',
           items: [
             { text: 'Java 简介', link: '/backend/Java/intro' },
+            { text: 'Java 基础', link: '/backend/Java/basic' },
           ]
         },
         {
