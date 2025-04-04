@@ -67,6 +67,7 @@ export default defineConfig({
           link: '/backend/algorithm/',
           items: [
             { text: '动态规划', link: '/backend/algorithm/dp' },
+            { text: '线性规划', link: '/backend/algorithm/linear_programming' },
           ]
         }
       ],
