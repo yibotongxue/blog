@@ -68,6 +68,13 @@ export default defineConfig({
           items: [
             { text: '动态规划', link: '/backend/algorithm/dp' },
             { text: '线性规划', link: '/backend/algorithm/linear_programming' },
+            {
+              text: '网络流算法',
+              link: '/backend/algorithm/network_flow',
+              items: [
+                { text: '最大流问题', link: '/backend/algorithm/network_flow/max_flow' },
+              ]
+            }
           ]
         }
       ],
