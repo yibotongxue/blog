@@ -73,6 +73,7 @@ export default defineConfig({
               link: '/backend/algorithm/network_flow',
               items: [
                 { text: '最大流问题', link: '/backend/algorithm/network_flow/max_flow' },
+                { text: '最小费用流', link: '/backend/algorithm/network_flow/min_cost' },
               ]
             }
           ]
