@@ -60,6 +60,7 @@ export default defineConfig({
             { text: 'Java 简介', link: '/backend/Java/intro' },
             { text: 'Java 基础', link: '/backend/Java/basic' },
             { text: '深入理解 Java', link: '/backend/Java/deep_understanding' },
+            { text: '异常处理与常用工具类', link: '/backend/Java/exception_and_utils_class' },
           ]
         },
         {
