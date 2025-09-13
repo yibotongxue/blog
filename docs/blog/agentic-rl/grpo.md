@@ -88,6 +88,10 @@ $$
 GRPO提出是在DeepSeekMath，后来应用于DeepSeek-R1，这两个模型的训练中，用到GRPO的都是推理能力的增强，而不再是之前的人类反馈强化学习，它们的奖励函数多是基于结果或基于过程的奖励，不是之前的由表示人类偏好的奖励模型给出。
 :::
 
+:::tip GRPO是on-policy还是off-policy？
+从公式来看GRPO是off-policy的，因为我们使用了之前旧的策略产生的样本然后进行重采样，但实际在DeepSeekMath的论文中，DeepSeek进行的是on-policy的强化学习，每一次采样后仅更新一次模型（源自[知乎文章](https://zhuanlan.zhihu.com/p/1932770229693450218)的评论区）。后续的DeepSeek-R1是on-policy还是off-policy，这个就不得而知了，论文中没有明确提及这一点，我的猜测是off-policy的，DeepSeekMath训练时模型相对较小，数据也相对较少，on-policy或许还能支持，但到了DeepSeek-R1，或许off-policy就难以避免了。
+:::
+
 ## 后续改进
 
 GRPO提出后，特别是DeepSeek-R1引起广大关注后，由于其训练稳定、显存占用少（少于PPO）、实现简单等优势，已经成为现今大多数对于大语言模型的强化学习训练，特别是针对模型推理能力的训练的首先选择。与此同时，也有不少人提出了一些对其的改进，它们中有些也体现出比较深刻的观察并得到足够的实验的验证。
@@ -150,4 +154,88 @@ $$
 
 :::tip
 这篇论文的排版和书写还是挺好的，特别是有一些详细的对比和颜色标注，很多问题看我的文章的语言描述后无法理解的，可以看原论文，会更容易理解一些。
+:::
+
+### GSPO
+
+GSPO（Group Sequence Policy Optimization，分组序列策略优化）是阿里巴巴的千问团队提出的一个对于GRPO的改进，其核心要义在于将原先GRPO中标记级别的重要性比率裁剪改为序列接别的，从而增强训练的稳定性。论文在[这里](https://arxiv.org/pdf/2507.18071)可以获取，论文比较简短，但也很清楚，也可以阅读他们的[中文博客](https://qwenlm.github.io/zh/blog/gspo/)。
+
+要理解GSPO设计的理念，我们需要回到重要性比率的意义，实际上如果你还记得[策略梯度定理](https://zhuanlan.zhihu.com/p/491647161)和TRPO的推导的话，就会知道这里我们引入重要性比率本质上在提高样本的利用率，我们在策略梯度定理的推导中引入了一个期望，我们通过采样求平均的方式来近似，但是每次模型更新都重新采样对计算资源会带来巨大的浪费，于是我们使用重采样，使用之前策略产生的样本但乘以一个重要性比率，它主要的数学依据是
+
+$$
+\mathbb{E}_{z \sim \pi_{\text{tar}}} \left[ f(z) \right] = \mathbb{E}_{z \sim \pi_{\text{beh}}} \left[ \frac{\pi_{\text{tar}}(z)}{\pi_{\text{beh}}(z)} f(z) \right]
+$$
+
+GRPO中，重要性比率是对每个标记计算并应用的，但我们的奖励或者优势又往往是对于整个序列而言的，这违背了原来重要性比率设计的理念，给训练梯度带来了高方差的噪声，这个噪声会随着长序列而累积并被裁剪操作放大。据此，千问的团队提出了GSPO，在序列级别上应用重要性比率。
+
+具体的，一般的GSPO的优化目标为
+
+$$
+\mathcal{J}_{\text{GSPO}}(\theta) = \mathbb{E}_{x \sim \mathcal{D},\, \{y_i\}_{i=1}^G \sim \pi_{\theta_{\text{old}}}(\cdot \mid x)} \left[ \frac{1}{G} \sum_{i=1}^G \min\left( s_i(\theta) \hat{A}_i,\ \text{clip}\left(s_i(\theta), 1 - \varepsilon, 1 + \varepsilon\right) \hat{A}_i \right) \right]
+$$
+
+其中
+
+$$
+\begin{array}{l}
+\hat{A}_i = \frac{r(x, y_i) - \text{mean}\left( \{r(x, y_i)\}_{i=1}^G \right)}{\text{std}\left( \{r(x, y_i)\}_{i=1}^G \right)}\\
+s_i(\theta) = \left( \frac{\pi_\theta(y_i \mid x)}{\pi_{\theta_{\text{old}}}(y_i \mid x)} \right)^{\frac{1}{|y_i|}} = \exp\left( \frac{1}{|y_i|} \sum_{t=1}^{|y_i|} \log \frac{\pi_\theta(y_{i,t} \mid x, y_{i,<t})}{\pi_{\theta_{\text{old}}}(y_{i,t} \mid x, y_{i,<t})} \right)
+\end{array}
+$$
+
+主要的改变就是我们重要性比率改为序列的概率的比，并且我们这里优势函数也是定义在整个序列上的（事实上之前的GRPO也多是整个序列的，因为往往是使用验证器对结果进行判断，之前定义的每个标记上的优势函数实际上也是同一个数）。这里为了避免方差的累积，定义 $s_i(\theta)$ 的时候使用生成序列的长度进行归一化。
+
+我们可以分析一下这个函数的梯度，为了简便期间，我们忽略裁剪操作，于是
+
+$$
+\begin{array}{l}
+\nabla_\theta \mathcal{J}_{\text{GSPO}}(\theta) &= \nabla_\theta \mathbb{E}_{x \sim \mathcal{D},\, \{y_i\}_{i=1}^G \sim \pi_{\theta_{\text{old}}}(\cdot \mid x)} \left[ \dfrac{1}{G} \sum_{i=1}^G s_i(\theta) \hat{A}_i \right] \\
+&= \mathbb{E}_{x \sim \mathcal{D},\, \{y_i\}_{i=1}^G \sim \pi_{\theta_{\text{old}}}(\cdot \mid x)} \left[ \dfrac{1}{G} \sum_{i=1}^G s_i(\theta) \hat{A}_i \cdot \nabla_\theta \log s_i(\theta) \right] \\
+&= \mathbb{E}_{x \sim \mathcal{D},\, \{y_i\}_{i=1}^G \sim \pi_{\theta_{\text{old}}}(\cdot \mid x)} \left[ \dfrac{1}{G} \sum_{i=1}^G \left( \dfrac{\pi_\theta(y_i \mid x)}{\pi_{\theta_{\text{old}}}(y_i \mid x)} \right)^{\frac{1}{|y_i|}} \hat{A}_i \cdot \dfrac{1}{|y_i|} \sum_{t=1}^{|y_i|} \nabla_\theta \log \pi_\theta(y_{i,t} \mid x, y_{i,<t}) \right]
+\end{array}
+$$
+
+我们同样可以看一下GRPO中的梯度
+
+$$
+\begin{array}{l}
+\nabla_\theta \mathcal{J}_{\text{GRPO}}(\theta) = \nabla_\theta \mathbb{E}_{x \sim \mathcal{D},\, \{y_i\}_{i=1}^G \sim \pi_{\theta_{\text{old}}}(\cdot \mid x)} \left[ \dfrac{1}{G} \sum_{i=1}^G \dfrac{1}{|y_i|} \sum_{t=1}^{|y_i|} w_{i,t}(\theta) \hat{A}_{i,t} \right] \\
+= \mathbb{E}_{x \sim \mathcal{D},\, \{y_i\}_{i=1}^G \sim \pi_{\theta_{\text{old}}}(\cdot \mid x)} \left[ \dfrac{1}{G} \sum_{i=1}^G \hat{A}_i \cdot \dfrac{1}{|y_i|} \sum_{t=1}^{|y_i|} \dfrac{\pi_\theta(y_{i,t} \mid x, y_{i,<t})}{\pi_{\theta_{\text{old}}}(y_{i,t} \mid x, y_{i,<t})} \nabla_\theta \log \pi_\theta(y_{i,t} \mid x, y_{i,<t}) \right]
+\end{array}
+$$
+
+可以看出主要的区别是在于，策略梯度求取期望的时候，对每个标记对数概率的权重上，GRPO是赋予不同的权重，而GSPO则是赋予了相同的权重。
+
+在多轮强化学习等场景中，我们需要一些标记级别上的操作，比如调用工具时工具的输出标记通常需要在损失计算时被忽略，所以我们还是需要标记级别的GSPO？一个自然而然的想法是将优化目标中的优势函数写开来，写成每个标记的优势函数的平均，但只要你仔细推导一下就会发现，对于基于结果的监督，每个标记的优势函数实际上是相等的，这样修改实际上没有带来任何改变。
+
+问题在哪里呢？问题在于我们需要找到一个因标记不同的量，将其期望或求和等形式写开为每个标记，这样才能带来区别，于是我们将目光转向策略梯度，看！
+
+$$
+\nabla_\theta \mathcal{J}_{\text{GSPO}}(\theta) = \mathbb{E}_{x \sim \mathcal{D},\, \{y_i\}_{i=1}^G \sim \pi_{\theta_{\text{old}}}(\cdot \mid x)} \left[ \dfrac{1}{G} \sum_{i=1}^G \left( \dfrac{\pi_\theta(y_i \mid x)}{\pi_{\theta_{\text{old}}}(y_i \mid x)} \right)^{\frac{1}{|y_i|}} \hat{A}_i \cdot \dfrac{1}{|y_i|} \sum_{t=1}^{|y_i|} \nabla_\theta \log \pi_\theta(y_{i,t} \mid x, y_{i,<t}) \right]
+$$
+
+这里的 $\dfrac{1}{|y_i|} \sum_{t=1}^{|y_i|} \nabla_\theta \log \pi_\theta(y_{i,t} \mid x, y_{i,<t})$ 便是我们真正需要调整的，于是我们在这里将前面的优势改为每个标记的优势并一一乘进去，就改为了
+
+$$
+\nabla_\theta \mathcal{J}_{\text{GSPO}}(\theta) = \mathbb{E}_{x \sim \mathcal{D},\, \{y_i\}_{i=1}^G \sim \pi_{\theta_{\text{old}}}(\cdot \mid x)} \left[ \frac{1}{G} \sum_{i=1}^G \left( \frac{\pi_\theta(y_i \mid x)}{\pi_{\theta_{\text{old}}}(y_i \mid x)} \right)^{\frac{1}{|y_i|}} \cdot \frac{1}{|y_i|} \sum_{t=1}^{|y_i|} \hat{A}_{i,t} \nabla_\theta \log \pi_\theta(y_{i,t} \mid x, y_{i,<t}) \right]
+$$
+
+这个数值上其实跟之前的GSPO是没有改变的，因为在结果监督的强化学习中， $\hat{A}_{i,t}$ 与 $\hat{A}_i$ 是相等的，但如果是过程监督的强化学习，则会有所改变，同时，即使仍然是结果监督的，GSPO也还是有意义的，一个重要的意义就是我们可以选择计算时忽略一些标记的损失。
+
+我们还是需要从这个策略梯度写出一个能造成这个梯度的优化目标，也就是
+
+$$
+\mathcal{J}_{\text{GSPO-token}}(\theta) = \mathbb{E}_{x \sim \mathcal{D},\, \{y_i\}_{i=1}^G \sim \pi_{\theta_{\text{old}}}(\cdot \mid x)} \left[ \frac{1}{G} \sum_{i=1}^G \frac{1}{|y_i|} \sum_{t=1}^{|y_i|} \min\left( s_{i,t}(\theta) \hat{A}_{i,t},\ \text{clip}\left(s_{i,t}(\theta), 1 - \varepsilon, 1 + \varepsilon\right) \hat{A}_{i,t} \right) \right]
+$$
+
+其中
+
+$$
+s_{i,t}(\theta) = \text{sg}\left[ s_i(\theta) \right] \cdot \frac{\pi_\theta(y_{i,t} \mid x, y_{i,<t})}{\text{sg}\left[ \pi_\theta(y_{i,t} \mid x, y_{i,<t}) \right]}
+$$
+
+其中的 $\text{sg}[\cdot]$ 表示的是保留数值但不计算梯度，可以看到实际上在结果监督的强化学习中， $s_{i,t}(\theta)$ 数值上还是等于 $s_i(\theta)$ 的。
+
+:::tip
+千问的论文中GSPO-token不是这样解释的，他们直接给出了新的优化目标，这有些突兀，有可能是这是一个不被我所知但广为流传的数学技巧，本篇文章的解释仅是我自己的观点。
 :::
