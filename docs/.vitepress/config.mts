@@ -41,7 +41,9 @@ export default defineConfig({
         {
           text: '智能体强化学习',
           link: '/blog/agentic-rl/',
-          items: []
+          items: [
+            { text: "GRPO及其后续改进", link: '/blog/agentic-rl/grpo' },
+          ]
         }
       ],
       '/backend/': [
