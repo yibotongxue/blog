@@ -32,6 +32,16 @@ export default defineConfig({
             { text: "iota", link: '/blog/modern-cpp/iota' },
             { text: "C++ 中的输出：从 printf 到 std::print", link: '/blog/modern-cpp/print' },
           ]
+        },
+        {
+          text: '生成模型',
+          link: '/blog/generative-model/',
+          items: []
+        },
+        {
+          text: '智能体强化学习',
+          link: '/blog/agentic-rl/',
+          items: []
         }
       ],
       '/backend/': [

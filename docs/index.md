@@ -11,11 +11,11 @@ hero:
       text: Blog
       link: /blog/
     - theme: alt
-      text: CV-Blog
-      link: https://yibotongxue.github.io/cv-blog/
+      text: 生成模型
+      link: /blog/generative-model/
     - theme: alt
-      text: nlp-blog
-      link: https://yibotongxue.github.io/nlp-blog/
+      text: 智能体强化学习
+      link: /blog/agentic-rl
 features_title: 这里有
 features:
   - icon: 📗
